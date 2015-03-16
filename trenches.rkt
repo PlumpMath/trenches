@@ -3,7 +3,8 @@
 (provide trenches
          bounds
          bounds-utm
-         plot-trenches)
+         plot-trenches
+         plot-trenches->file)
 
 (require json)
 (require net/url)
@@ -181,7 +182,11 @@
 ;; (: plot-trenches->file (-> String (Listof (Listof (Vector Number Number))) Void))
 (define (plot-trenches->file path trenches)
   (send (pict->bitmap
-          (scale (colorize (linewidth 5 (plot-trenches trenches)) "red") 0.5))
+          (inset
+            (scale
+              (colorize (linewidth 10 (plot-trenches trenches)) "red")
+              0.25)
+            -5.0))
         save-file
         path
         'png))
