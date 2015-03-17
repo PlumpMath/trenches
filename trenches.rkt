@@ -12,6 +12,7 @@
 (require pict)
 (require racket/draw)
 (require data/utm)
+(require data/sort-by-distance)
 
 ;; (: sparql-url String)
 (define sparql-url "http://rdf.muninn-project.org/sparql")
@@ -151,15 +152,11 @@
             (round (inexact->exact (vector-ref max-utm 0)))
             (round (inexact->exact (vector-ref max-utm 1))))))
 
-;; (: plots-trenches (-> (Listof (Listof (Vector Number Number))) Pict))
-(define (plot-trenches trenches)
+;; (: project (-> (Listof (Listof (Vector Number Number))) (Listof (Listof (Vector Number Number)))))
+(define (plot-project trenches)
   (let* ([bounds-utm-trenches (bounds-utm trenches)]
-         [min-x (vector-ref bounds-utm-trenches 0)]
-         [min-y (vector-ref bounds-utm-trenches 1)]
          [max-x (vector-ref bounds-utm-trenches 2)]
          [max-y (vector-ref bounds-utm-trenches 3)]
-         [width (- max-x min-x)]
-         [height (- max-y min-y)]
          [get-x (λ (point-wgs84)
                    (- max-x
                       (vector-ref (utm (vector-ref point-wgs84 0)
@@ -170,23 +167,48 @@
                       (vector-ref (utm (vector-ref point-wgs84 0)
                                        (vector-ref point-wgs84 1))
                                   1)))])
+    (map  (λ (trench)
+             (sort-by-distance
+               (map (λ (point-wgs84)
+                           (vector (get-x point-wgs84)
+                                   (get-y point-wgs84)))
+                        trench)))
+          trenches)))
+
+;; (: plots-trenches (-> (Listof (Listof (Vector Number Number))) Pict))
+(define (plot-trenches trenches)
+  (let* ([bounds-utm-trenches (bounds-utm trenches)]
+         [projected-trenches (plot-project trenches)]
+         [min-x (vector-ref bounds-utm-trenches 0)]
+         [min-y (vector-ref bounds-utm-trenches 1)]
+         [max-x (vector-ref bounds-utm-trenches 2)]
+         [max-y (vector-ref bounds-utm-trenches 3)]
+         [width (- max-x min-x)]
+         [height (- max-y min-y)])
     (dc (λ (dc dx dy)
-           (for ([trench trenches])
-             (for ([point-wgs84 trench])
+           (for ([trench projected-trenches])
+             (let ([points (map (λ (point-utm)
+                                  (make-object point%
+                                               (vector-ref point-utm 0)
+                                               (vector-ref point-utm 1)))
+                               trench)])
                (send dc
-                     draw-point
-                     (get-x point-wgs84)
-                     (get-y point-wgs84)))))
-        width height)))
+                     draw-lines
+                     points))))
+           width height)))
 
 ;; (: plot-trenches->file (-> String (Listof (Listof (Vector Number Number))) Void))
 (define (plot-trenches->file path trenches)
   (send (pict->bitmap
           (inset
             (scale
-              (colorize (linewidth 10 (plot-trenches trenches)) "red")
-              0.25)
-            -5.0))
+              (cc-superimpose
+                (colorize (linewidth 15 (plot-trenches trenches))
+                          (make-object color% 5 5 5 1.0))
+                (colorize (linewidth 5 (plot-trenches trenches))
+                          (make-object color% 10 10 10)))
+              1.0)
+            -25.0))
         save-file
         path
         'png))
