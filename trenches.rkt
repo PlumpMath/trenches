@@ -11,9 +11,8 @@
 (require net/uri-codec)
 (require pict)
 (require racket/draw)
-(require data/utm)
-(require data/sort-by-distance)
-(require "../pict-subtract/subtract.rkt")
+(require muninn/utm)
+(require muninn/sort-by-distance)
 
 ;; (: sparql-url String)
 (define sparql-url "http://rdf.muninn-project.org/sparql")
