@@ -13,6 +13,7 @@
 (require racket/draw)
 (require data/utm)
 (require data/sort-by-distance)
+(require "../pict-subtract/subtract.rkt")
 
 ;; (: sparql-url String)
 (define sparql-url "http://rdf.muninn-project.org/sparql")
@@ -29,8 +30,17 @@
 ;; (: sparql-debug String)
 (define sparql-debug "on")
 
-;; (: trench-depth Number)
-(define trench-depth -1)
+;; (: trench-outer-depth Integer)
+(define trench-outer-depth 3)
+
+;; (: trench-inner-depth Integer)
+(define trench-inner-depth 3)
+
+;; (: trench-outer-width Integer)
+(define trench-outer-width 5)
+
+;; (: trench-inner-width Integer)
+(define trench-inner-width 5)
 
 ;; (: make-sparql-query-url (-> String String))
 (define (make-sparql-query-url query)
@@ -199,16 +209,17 @@
 
 ;; (: plot-trenches->file (-> String (Listof (Listof (Vector Number Number))) Void))
 (define (plot-trenches->file path trenches)
-  (send (pict->bitmap
-          (inset
-            (scale
+  (let ([plotted-trenches (plot-trenches trenches)])
+    (send (pict->bitmap
+            (inset
               (cc-superimpose
-                (colorize (linewidth 15 (plot-trenches trenches))
-                          (make-object color% 5 5 5 1.0))
-                (colorize (linewidth 5 (plot-trenches trenches))
-                          (make-object color% 10 10 10)))
-              1.0)
-            -25.0))
-        save-file
-        path
-        'png))
+                (colorize (linewidth trench-outer-width
+                                     plotted-trenches)
+                          (make-object color% trench-outer-depth trench-outer-depth trench-outer-depth))
+                (colorize (linewidth trench-inner-width
+                                     plotted-trenches)
+                          (make-object color% trench-inner-depth trench-inner-depth trench-inner-depth)))
+              0.0))
+          save-file
+          path
+          'png)))
