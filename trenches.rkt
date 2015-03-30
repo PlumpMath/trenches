@@ -193,32 +193,27 @@
          [max-x (vector-ref bounds-utm-trenches 2)]
          [max-y (vector-ref bounds-utm-trenches 3)]
          [width (- max-x min-x)]
-         [height (- max-y min-y)])
-    (dc (λ (dc dx dy)
-           (for ([trench projected-trenches])
-             (let ([points (map (λ (point-utm)
-                                  (make-object point%
-                                               (vector-ref point-utm 0)
-                                               (vector-ref point-utm 1)))
-                               trench)])
-               (send dc
-                     draw-lines
-                     points))))
-           width height)))
+         [height (- max-y min-y)]
+         [plotted-trenches
+           (dc (λ (dc dx dy)
+                  (for ([trench projected-trenches])
+                    (let ([points (map (λ (point-utm)
+                                          (make-object point%
+                                                       (vector-ref point-utm 0)
+                                                       (vector-ref point-utm 1)))
+                                       trench)])
+                      (send dc
+                            draw-lines
+                            points))))
+               width height)]
+         (cc-superimpose
+           (colorize (linewidth trench-outer-width
+                                plotted-trenches)
+                     (make-object color% trench-outer-depth trench-outer-depth trench-outer-depth))
+           (colorize (linewidth trench-inner-width
+                                plotted-trenches)
+                     (make-object color% trench-inner-depth trench-inner-depth trench-inner-depth))))))
 
 ;; (: plot-trenches->file (-> String (Listof (Listof (Vector Number Number))) Void))
 (define (plot-trenches->file path trenches)
-  (let ([plotted-trenches (plot-trenches trenches)])
-    (send (pict->bitmap
-            (inset
-              (cc-superimpose
-                (colorize (linewidth trench-outer-width
-                                     plotted-trenches)
-                          (make-object color% trench-outer-depth trench-outer-depth trench-outer-depth))
-                (colorize (linewidth trench-inner-width
-                                     plotted-trenches)
-                          (make-object color% trench-inner-depth trench-inner-depth trench-inner-depth)))
-              0.0))
-          save-file
-          path
-          'png)))
+  (send (pict->bitmap (plot-trenches trenches)) save-file path 'png))
