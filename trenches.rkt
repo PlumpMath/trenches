@@ -205,14 +205,14 @@
                       (send dc
                             draw-lines
                             points))))
-               width height)]
-         (cc-superimpose
-           (colorize (linewidth trench-outer-width
-                                plotted-trenches)
-                     (make-object color% trench-outer-depth trench-outer-depth trench-outer-depth))
-           (colorize (linewidth trench-inner-width
-                                plotted-trenches)
-                     (make-object color% trench-inner-depth trench-inner-depth trench-inner-depth))))))
+               width height)])
+    (cc-superimpose
+      (colorize (linewidth trench-outer-width
+                           plotted-trenches)
+                (make-object color% trench-outer-depth trench-outer-depth trench-outer-depth))
+      (colorize (linewidth trench-inner-width
+                           plotted-trenches)
+                (make-object color% trench-inner-depth trench-inner-depth trench-inner-depth)))))
 
 ;; (: plot-trenches->file (-> String (Listof (Listof (Vector Number Number))) Void))
 (define (plot-trenches->file path trenches)
